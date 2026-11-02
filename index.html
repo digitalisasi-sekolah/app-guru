@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Administrasi Guru - SMKN 1 Wakatobi</title>
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#173f32">
+  <style>
+    :root {
+      --primary-color: #173f32;
+      --secondary-color: #2e7d32;
+      --bg-color: #f4f6f8;
+      --card-bg: #ffffff;
+      --text-color: #333333;
+      --danger-color: #c62828;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 30px; }
+
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    header h1 { font-size: 18px; }
+    header .user-info { font-size: 14px; display: flex; align-items: center; gap: 10px; }
+
+    .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .grid { display: grid; gap: 15px; }
+    .cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cols-5 { grid-template-columns: repeat(5, 1fr); }
+
+    @media (max-width: 768px) {
+      .cols-2, .cols-3, .cols-5 { grid-template-columns: 1fr; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 13px; font-weight: bold; color: #555; }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary { background-color: var(--primary-color); color: white; }
+    .btn-primary:hover { background-color: #0f2b22; }
+    .btn-secondary { background-color: #6c757d; color: white; }
+    .btn-danger { background-color: var(--danger-color); color: white; }
+    .btn-wa { background-color: #25D366; color: white; text-decoration: none; text-align: center; display: inline-block; }
+
+    .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
+    .tab-btn {
+      padding: 10px 15px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: bold;
+      color: #666;
+      border-bottom: 3px solid transparent;
+    }
+    .tab-btn.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+
+    .hidden { display: none !important; }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <h1>Aplikasi Guru SMKN 1 Wakatobi</h1>
+      <small style="opacity: 0.8;">Versi <span class="app-version">v1.42</span></small>
+    </div>
+    <div class="user-info" id="header-user-info">
+      <span id="user-display-name">Guest</span>
+      <button class="btn btn-secondary" id="btn-logout" onclick="Auth.logout()" style="padding: 5px 10px; font-size: 12px;">Logout</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- FORM LOGIN -->
+    <div id="section-login" class="card" style="max-width: 400px; margin: 50px auto;">
+      <h2 style="margin-bottom: 20px; text-align: center; color: var(--primary-color);">Login System</h2>
+      
+      <div class="nav-tabs" style="justify-content: center;">
+        <button class="tab-btn active" onclick="UI.switchLoginTab('guru')">Guru</button>
+        <button class="tab-btn" onclick="UI.switchLoginTab('admin')">Admin (Kepsek/Wakasek)</button>
+      </div>
+
+      <!-- Login Guru -->
+      <form id="form-login-guru" onsubmit="UI.handleLoginGuru(event)">
+        <div class="field" style="margin-bottom: 15px;">
+          <label>Nomor WhatsApp / HP</label>
+          <input type="text" id="login-hp" placeholder="Contoh: 085298875399" required>
+        </div>
+        <div class="field" style="margin-bottom: 20px;">
+          <label>Password</label>
+          <input type="password" id="login-pass-guru" placeholder="Default: 12345" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk Guru</button>
+      </form>
+
+      <!-- Login Admin -->
+      <form id="form-login-admin" class="hidden" onsubmit="UI.handleLoginAdmin(event)">
+        <div class="field" style="margin-bottom: 20px;">
+          <label>Password Admin / Wakasek</label>
+          <input type="password" id="login-pass-admin" placeholder="Masukkan Password Admin" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%;">Masuk Admin</button>
+      </form>
+    </div>
+
+    <!-- DASHBOARD ADMIN (KEPSEK / WAKASEK KURIKULUM) -->
+    <div id="section-admin" class="hidden">
+      <!-- Tabs Admin -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" onclick="UI.switchAdminTab('monitoring')">📊 Monitoring PBM</button>
+        <button class="tab-btn" onclick="UI.switchAdminTab('jadwal')">📅 Pengaturan Jadwal</button>
+        <button class="tab-btn" onclick="UI.switchAdminTab('import')">📤 Import Data CSV</button>
+      </div>
+
+      <!-- Tab 1: Pemantauan PBM Real-Time -->
+      <div id="admin-tab-monitoring">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+            <h3>📊 Pemantauan PBM Real-Time</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <select id="select-hari-monitor">
+                <option value="Senin">Senin</option>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
+                <option value="Sabtu">Sabtu</option>
+              </select>
+              <select id="select-jam-monitor">
+                <option value="1">Jam Ke-1</option>
+                <option value="2">Jam Ke-2</option>
+                <option value="3">Jam Ke-3</option>
+                <option value="4">Jam Ke-4</option>
+                <option value="5">Jam Ke-5</option>
+                <option value="6">Jam Ke-6</option>
+                <option value="7">Jam Ke-7</option>
+                <option value="8">Jam Ke-8</option>
+              </select>
+              <button class="btn btn-primary" onclick="UI.loadPBMMonitoring()">Cek PBM</button>
+            </div>
+          </div>
+
+          <div id="pbm-grid-container" class="grid cols-3">
+            <!-- Grid Status Kelas di-render dinamis oleh ui.js -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Pengaturan Jadwal Dinamis -->
+      <div id="admin-tab-jadwal" class="hidden">
+        <div class="card">
+          <h3>📅 Pengaturan Jadwal Pelajaran</h3>
+          <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Tambahkan jam mengajar dinamis untuk guru mata pelajaran.</p>
+          
+          <div id="jadwal-rows-container">
+            <!-- Dynamic rows will be inserted here -->
+          </div>
+
+          <div style="margin-top: 15px; display: flex; gap: 10px;">
+            <button class="btn btn-secondary" onclick="UI.renderJadwalInputRow('jadwal-rows-container')">➕ Tambah Jam</button>
+            <button class="btn btn-primary" onclick="alert('Jadwal disimpan ke database!')">Simpan Jadwal</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Import Data Kolektif CSV -->
+      <div id="admin-tab-import" class="hidden">
+        <div class="card">
+          <h3>📤 Import Kolektif Data Guru & Siswa</h3>
+          <div class="grid cols-2" style="margin-top: 15px;">
+            <div>
+              <h4>Import Data Guru (CSV)</h4>
+              <p style="font-size: 12px; color: #666;">Format: Nama, NIP, No_HP, Mapel, Jurusan</p>
+              <input type="file" id="file-csv-guru" accept=".csv" style="margin: 10px 0;">
+              <button class="btn btn-primary" onclick="UI.handleImportGuru()">Unggah Guru</button>
+            </div>
+            <div>
+              <h4>Import Data Siswa (CSV)</h4>
+              <p style="font-size: 12px; color: #666;">Format: Nama, Kelas, NISN, Tingkat_Fase</p>
+              <input type="file" id="file-csv-siswa" accept=".csv" style="margin: 10px 0;">
+              <button class="btn btn-primary" onclick="UI.handleImportSiswa()">Unggah Siswa</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD GURU -->
+    <div id="section-guru" class="hidden">
+      <div class="card">
+        <h2>Selamat Datang, <span id="guru-nama-display">-</span></h2>
+        <p style="color: #666; font-size: 14px;">Mata Pelajaran: <span id="guru-mapel-display">-</span> | NIP: <span id="guru-nip-display">-</span></p>
+      </div>
+
+      <div class="card">
+        <h3>📝 Administrasi Pembelajaran</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 15px;">Silakan pilih kelas dan isi kehadiran/jurnal PBM hari ini.</p>
+        <button class="btn btn-primary" onclick="alert('Fitur Absensi & Jurnal Kelas Aktif')">Isi Kehadiran & Jurnal PBM</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="./js/config.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/ui.js"></script>
+  <script src="./js/app.js"></script>
+</body>
+</html>
