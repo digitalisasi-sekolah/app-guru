@@ -43,7 +43,7 @@ const UI = {
 
     if (tabName === 'monitoring') {
       tabBtns[0].classList.add('active');
-      this.loadPBMMonitoring();
+      this.loadPBMMonitoringOtomatis();
     } else if (tabName === 'jadwal') {
       tabBtns[1].classList.add('active');
       if (document.getElementById('jadwal-rows-container').children.length === 0) {
@@ -141,66 +141,78 @@ const UI = {
     container.insertAdjacentHTML('beforeend', html);
   },
 
-  // === PEMANTAUAN PBM REAL-TIME & WA REMINDER ===
-  renderPBMMonitoring(monitoringData) {
+  // === PEMANTAUAN OTOMATIS KELAS KOSONG (TANPA FILTER) ===
+  async loadPBMMonitoringOtomatis() {
     const container = document.getElementById('pbm-grid-container');
+    const summaryBox = document.getElementById('pbm-summary-box');
+    const timeInfo = document.getElementById('pbm-time-info');
     if (!container) return;
 
-    if (!monitoringData || monitoringData.length === 0) {
-      container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #777; padding: 20px;">Tidak ada jadwal pelajaran aktif pada hari dan jam ini.</p>`;
-      return;
-    }
-
-    let html = '';
-    monitoringData.forEach(item => {
-      const statusBg = item.isHadir ? '#e8f5e9' : '#ffebee';
-      const statusBorder = item.isHadir ? '#2e7d32' : '#c62828';
-      const statusBadge = item.isHadir 
-        ? `<span class="status-badge" style="background:#2e7d32; color:#fff;">✅ Terisi / Ada Guru</span>`
-        : `<span class="status-badge" style="background:#c62828; color:#fff;">⚠️ Kelas Kosong / Belum Masuk</span>`;
-
-      html += `
-        <div style="background: ${statusBg}; border-left: 5px solid ${statusBorder}; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px;">
-            <h4 style="margin:0; font-size:16px; color:#111;">${item.kelas}</h4>
-            ${statusBadge}
-          </div>
-          <p style="margin: 4px 0; font-weight:bold; color:#333;">${item.mapel}</p>
-          <p style="margin: 0 0 12px 0; font-size:13px; color:#555;">👨‍🏫 ${item.guruNama}</p>
-          
-          ${!item.isHadir ? `
-            <a href="${item.waLink}" target="_blank" class="btn btn-wa" style="width:100%; font-size:13px; padding: 8px 0;">
-              📱 Ingatkan via WhatsApp
-            </a>
-          ` : `
-            <div style="font-size:12px; color:#2e7d32; text-align:center; font-style:italic; font-weight:bold;">Guru telah mengisi presensi/jurnal</div>
-          `}
-        </div>
-      `;
-    });
-
-    container.innerHTML = html;
-  },
-
-  async loadPBMMonitoring() {
-    const hari = document.getElementById('select-hari-monitor').value;
-    const jamKe = document.getElementById('select-jam-monitor').value;
+    // Deteksi Hari & Jam Secara Otomatis
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const now = new Date();
+    const currentHari = days[now.getDay()];
     
-    const container = document.getElementById('pbm-grid-container');
-    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 20px;">Memuat status kelas...</p>`;
+    // Logika penentuan jam ke- berdasarkan jam sekarang (Bisa disesuaikan)
+    const hour = now.getHours();
+    let currentJamKe = 1;
+    if (hour >= 8 && hour < 9) currentJamKe = 2;
+    else if (hour >= 9 && hour < 10) currentJamKe = 3;
+    else if (hour >= 10 && hour < 11) currentJamKe = 4;
+    else if (hour >= 11 && hour < 12) currentJamKe = 5;
+    else if (hour >= 12 && hour < 13) currentJamKe = 6;
+    else if (hour >= 13) currentJamKe = 7;
+
+    timeInfo.textContent = `Waktu Sistem: ${currentHari}, Pukul ${now.toLocaleTimeString('id-ID')} (Jam Ke-${currentJamKe})`;
+    container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 20px;">Memuat status kelas otomatis...</p>`;
 
     try {
       const response = await fetch(CONFIG.GAS_ENDPOINT, {
         method: "POST",
         body: JSON.stringify({
           action: "getMonitoringPBM",
-          hari: hari,
-          jamKe: jamKe
+          hari: currentHari,
+          jamKe: currentJamKe
         })
       }).then(res => res.json());
 
       if (response.status === "success") {
-        this.renderPBMMonitoring(response.monitoring);
+        // Filter HANYA kelas yang BELUM terisi/belum masuk
+        const kelasKosong = (response.monitoring || []).filter(item => !item.isHadir);
+
+        document.getElementById('pbm-empty-count').textContent = kelasKosong.length;
+
+        if (kelasKosong.length === 0) {
+          summaryBox.style.background = "#e8f5e9";
+          summaryBox.style.borderLeftColor = "#2e7d32";
+          summaryBox.innerHTML = `<div>✅ Semua kelas terdaftar pada Jam Ke-${currentJamKe} telah terisi oleh Guru.</div>`;
+          container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #2e7d32; font-weight: bold; padding: 30px;">Tidak ada kelas kosong saat ini.</p>`;
+          return;
+        }
+
+        summaryBox.style.background = "#fff3e0";
+        summaryBox.style.borderLeftColor = "#f57c00";
+        summaryBox.innerHTML = `<div>⚠️ Terdapat <strong>${kelasKosong.length}</strong> kelas yang <strong>belum terisi / belum ada guru</strong> pada Jam Ke-${currentJamKe}.</div>`;
+
+        let html = '';
+        kelasKosong.forEach(item => {
+          html += `
+            <div style="background: #ffebee; border-left: 5px solid #c62828; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 8px;">
+                <h4 style="margin:0; font-size:16px; color:#111;">${item.kelas}</h4>
+                <span class="status-badge" style="background:#c62828; color:#fff;">⚠️ Kelas Kosong</span>
+              </div>
+              <p style="margin: 4px 0; font-weight:bold; color:#333;">${item.mapel}</p>
+              <p style="margin: 0 0 12px 0; font-size:13px; color:#555;">👨‍🏫 Guru: <strong>${item.guruNama}</strong></p>
+              
+              <a href="${item.waLink}" target="_blank" class="btn btn-wa" style="width:100%; font-size:13px; padding: 8px 0;">
+                📱 Ingatkan via WhatsApp
+              </a>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
       } else {
         container.innerHTML = `<p style="color:red; grid-column: 1/-1; text-align:center;">Gagal memuat data monitoring.</p>`;
       }
@@ -209,7 +221,37 @@ const UI = {
     }
   },
 
-  // === IMPORT CSV HANDLERS ===
+  // === UNDUH TEMPLATE CSV (GURU & SISWA) ===
+  downloadTemplateCSV(type) {
+    let csvContent = "";
+    let fileName = "";
+
+    if (type === 'guru') {
+      csvContent = "Nama,NIP,No_HP,Mapel,Jurusan\n" +
+                   "Ajiardin S.T. Gr.,198501012010011001,085298875399,Kreativitas Inovasi dan Kewirausahaan,TKJ\n" +
+                   "Farida S.Pi. Gr.,199603072023212032,081234567890,Dasar-Dasar Agribisnis,APAT\n" +
+                   "Nining Suhartini,199001012022012001,082345678901,Perhotelan,Perhotelan";
+      fileName = "Template_Data_Guru.csv";
+    } else if (type === 'siswa') {
+      csvContent = "Nama,Kelas,NISN,Tingkat_Fase\n" +
+                   "Salfian Lina Saputri,XI TKJ 1,0051234567,Fase F\n" +
+                   "Ahmad Dahlan,XI TKJ 1,0051234568,Fase F\n" +
+                   "Siti Nurhaliza,XI PH 2,0051234569,Fase F";
+      fileName = "Template_Data_Siswa.csv";
+    }
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", fileName);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  },
+
+  // === HANDLER IMPORT CSV ===
   handleImportGuru() {
     const fileInput = document.getElementById('file-csv-guru');
     if (!fileInput.files[0]) return alert('Pilih file CSV Guru terlebih dahulu!');
