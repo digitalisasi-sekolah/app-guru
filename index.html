@@ -14,6 +14,7 @@
       --card-bg: #ffffff;
       --text-color: #333333;
       --danger-color: #c62828;
+      --warning-color: #f57c00;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -76,6 +77,7 @@
     .btn-primary:hover { background-color: #0f2b22; }
     .btn-secondary { background-color: #6c757d; color: white; }
     .btn-danger { background-color: var(--danger-color); color: white; }
+    .btn-outline { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
     .btn-wa { background-color: #25D366; color: white; text-decoration: none; text-align: center; display: inline-block; }
 
     .nav-tabs { display: flex; gap: 10px; border-bottom: 2px solid #ddd; margin-bottom: 20px; }
@@ -97,6 +99,17 @@
       border-radius: 12px;
       font-size: 12px;
       font-weight: bold;
+    }
+
+    .alert-summary {
+      background: #fff3e0;
+      border-left: 5px solid var(--warning-color);
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
   </style>
 </head>
@@ -152,41 +165,31 @@
     <div id="section-admin" class="hidden">
       <!-- Tabs Admin -->
       <div class="nav-tabs">
-        <button class="tab-btn active" onclick="UI.switchAdminTab('monitoring')">📊 Monitoring PBM</button>
+        <button class="tab-btn active" onclick="UI.switchAdminTab('monitoring')">📊 Monitoring Kelas Kosong</button>
         <button class="tab-btn" onclick="UI.switchAdminTab('jadwal')">📅 Pengaturan Jadwal</button>
         <button class="tab-btn" onclick="UI.switchAdminTab('import')">📤 Import Data CSV</button>
       </div>
 
-      <!-- Tab 1: Pemantauan PBM Real-Time -->
+      <!-- Tab 1: Pemantauan PBM Otomatis (Tanpa Filter) -->
       <div id="admin-tab-monitoring">
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-            <h3>📊 Pemantauan PBM Real-Time</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-              <select id="select-hari-monitor">
-                <option value="Senin">Senin</option>
-                <option value="Selasa">Selasa</option>
-                <option value="Rabu">Rabu</option>
-                <option value="Kamis">Kamis</option>
-                <option value="Jumat">Jumat</option>
-                <option value="Sabtu">Sabtu</option>
-              </select>
-              <select id="select-jam-monitor">
-                <option value="1">Jam Ke-1</option>
-                <option value="2">Jam Ke-2</option>
-                <option value="3">Jam Ke-3</option>
-                <option value="4">Jam Ke-4</option>
-                <option value="5">Jam Ke-5</option>
-                <option value="6">Jam Ke-6</option>
-                <option value="7">Jam Ke-7</option>
-                <option value="8">Jam Ke-8</option>
-              </select>
-              <button class="btn btn-primary" onclick="UI.loadPBMMonitoring()">Cek PBM</button>
+            <div>
+              <h3>⚠️ Pemantauan PBM Real-Time (Jam Berjalan)</h3>
+              <p style="font-size: 13px; color: #666;" id="pbm-time-info">Menampilkan kelas yang belum terisi pada jam aktif saat ini.</p>
+            </div>
+            <button class="btn btn-outline" onclick="UI.loadPBMMonitoringOtomatis()">🔄 Refresh Status</button>
+          </div>
+
+          <!-- Ringkasan Status -->
+          <div class="alert-summary" id="pbm-summary-box">
+            <div>
+              <strong id="pbm-empty-count">0</strong> kelas terdeteksi <strong>belum terisi / belum ada guru</strong>.
             </div>
           </div>
 
           <div id="pbm-grid-container" class="grid cols-3">
-            <!-- Grid Status Kelas di-render dinamis oleh ui.js -->
+            <!-- Grid Status Kelas Kosong di-render dinamis oleh ui.js -->
           </div>
         </div>
       </div>
@@ -208,22 +211,43 @@
         </div>
       </div>
 
-      <!-- Tab 3: Import Data Kolektif CSV -->
+      <!-- Tab 3: Import Data Kolektif CSV & Template -->
       <div id="admin-tab-import" class="hidden">
         <div class="card">
           <h3>📤 Import Kolektif Data Guru & Siswa</h3>
-          <div class="grid cols-2" style="margin-top: 15px;">
-            <div>
-              <h4>Import Data Guru (CSV)</h4>
-              <p style="font-size: 12px; color: #666;">Format: Nama, NIP, No_HP, Mapel, Jurusan</p>
-              <input type="file" id="file-csv-guru" accept=".csv" style="margin: 10px 0;">
-              <button class="btn btn-primary" onclick="UI.handleImportGuru()">Unggah Guru</button>
+          <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Unduh template terlebih dahulu, isi data sesuai format, lalu unggah berkas CSV Anda.</p>
+
+          <div class="grid cols-2">
+            <!-- Modul Import Guru -->
+            <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; background: #fafafa;">
+              <h4>👨‍🏫 Data Guru</h4>
+              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format: Nama, NIP, No_HP, Mapel, Jurusan</p>
+              
+              <button class="btn btn-outline" onclick="UI.downloadTemplateCSV('guru')" style="width: 100%; margin-bottom: 15px; font-size: 12px;">
+                📥 Unduh Template CSV Guru
+              </button>
+
+              <div class="field" style="margin-bottom: 10px;">
+                <label>Pilih Berkas CSV Guru</label>
+                <input type="file" id="file-csv-guru" accept=".csv">
+              </div>
+              <button class="btn btn-primary" onclick="UI.handleImportGuru()" style="width: 100%;">Unggah Data Guru</button>
             </div>
-            <div>
-              <h4>Import Data Siswa (CSV)</h4>
-              <p style="font-size: 12px; color: #666;">Format: Nama, Kelas, NISN, Tingkat_Fase</p>
-              <input type="file" id="file-csv-siswa" accept=".csv" style="margin: 10px 0;">
-              <button class="btn btn-primary" onclick="UI.handleImportSiswa()">Unggah Siswa</button>
+
+            <!-- Modul Import Siswa -->
+            <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; background: #fafafa;">
+              <h4>👨‍🎓 Data Siswa</h4>
+              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format: Nama, Kelas, NISN, Tingkat_Fase</p>
+
+              <button class="btn btn-outline" onclick="UI.downloadTemplateCSV('siswa')" style="width: 100%; margin-bottom: 15px; font-size: 12px;">
+                📥 Unduh Template CSV Siswa
+              </button>
+
+              <div class="field" style="margin-bottom: 10px;">
+                <label>Pilih Berkas CSV Siswa</label>
+                <input type="file" id="file-csv-siswa" accept=".csv">
+              </div>
+              <button class="btn btn-primary" onclick="UI.handleImportSiswa()" style="width: 100%;">Unggah Data Siswa</button>
             </div>
           </div>
         </div>
