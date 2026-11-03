@@ -111,6 +111,14 @@
       justify-content: space-between;
       align-items: center;
     }
+
+    .template-box {
+      border: 1px dashed var(--primary-color);
+      padding: 15px;
+      border-radius: 8px;
+      background: #f0f7f4;
+      margin-bottom: 15px;
+    }
   </style>
 </head>
 <body>
@@ -211,43 +219,49 @@
         </div>
       </div>
 
-      <!-- Tab 3: Import Data Kolektif CSV & Template -->
+      <!-- Tab 3: Import Data Kolektif CSV & Unduh Template -->
       <div id="admin-tab-import" class="hidden">
         <div class="card">
-          <h3>📤 Import Kolektif Data Guru & Siswa</h3>
-          <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Unduh template terlebih dahulu, isi data sesuai format, lalu unggah berkas CSV Anda.</p>
+          <h3>📤 Import Data CSV & Unduh Template Format</h3>
+          <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Silakan unduh berkas contoh/template terlebih dahulu untuk memastikan format kolom sesuai sebelum diunggah.</p>
 
           <div class="grid cols-2">
-            <!-- Modul Import Guru -->
+            <!-- Import & Template Guru -->
             <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; background: #fafafa;">
               <h4>👨‍🏫 Data Guru</h4>
-              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format: Nama, NIP, No_HP, Mapel, Jurusan</p>
+              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format Header: <code>Nama, NIP, No_HP, Mapel, Jurusan</code></p>
               
-              <button class="btn btn-outline" onclick="UI.downloadTemplateCSV('guru')" style="width: 100%; margin-bottom: 15px; font-size: 12px;">
-                📥 Unduh Template CSV Guru
-              </button>
+              <div class="template-box">
+                <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--primary-color);">Unduh Format Contoh:</p>
+                <button class="btn btn-outline" onclick="UI.downloadTemplateGuruCSV()" style="width: 100%; font-size: 13px; font-weight: bold; background: #fff;">
+                  📥 Unduh Template CSV Guru
+                </button>
+              </div>
 
               <div class="field" style="margin-bottom: 10px;">
                 <label>Pilih Berkas CSV Guru</label>
                 <input type="file" id="file-csv-guru" accept=".csv">
               </div>
-              <button class="btn btn-primary" onclick="UI.handleImportGuru()" style="width: 100%;">Unggah Data Guru</button>
+              <button class="btn btn-primary" onclick="UI.handleImportGuru()" style="width: 100%;">Upload Data Guru</button>
             </div>
 
-            <!-- Modul Import Siswa -->
+            <!-- Import & Template Siswa -->
             <div style="border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; background: #fafafa;">
               <h4>👨‍🎓 Data Siswa</h4>
-              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format: Nama, Kelas, NISN, Tingkat_Fase</p>
+              <p style="font-size: 12px; color: #666; margin: 5px 0 10px 0;">Format Header: <code>Nama, Kelas, NISN, Tingkat_Fase</code></p>
 
-              <button class="btn btn-outline" onclick="UI.downloadTemplateCSV('siswa')" style="width: 100%; margin-bottom: 15px; font-size: 12px;">
-                📥 Unduh Template CSV Siswa
-              </button>
+              <div class="template-box">
+                <p style="font-size: 12px; font-weight: bold; margin-bottom: 8px; color: var(--primary-color);">Unduh Format Contoh:</p>
+                <button class="btn btn-outline" onclick="UI.downloadTemplateSiswaCSV()" style="width: 100%; font-size: 13px; font-weight: bold; background: #fff;">
+                  📥 Unduh Template CSV Siswa
+                </button>
+              </div>
 
               <div class="field" style="margin-bottom: 10px;">
                 <label>Pilih Berkas CSV Siswa</label>
                 <input type="file" id="file-csv-siswa" accept=".csv">
               </div>
-              <button class="btn btn-primary" onclick="UI.handleImportSiswa()" style="width: 100%;">Unggah Data Siswa</button>
+              <button class="btn btn-primary" onclick="UI.handleImportSiswa()" style="width: 100%;">Upload Data Siswa</button>
             </div>
           </div>
         </div>
