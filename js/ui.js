@@ -153,7 +153,7 @@ const UI = {
     const now = new Date();
     const currentHari = days[now.getDay()];
     
-    // Logika penentuan jam ke- berdasarkan jam sekarang (Bisa disesuaikan)
+    // Logika penentuan jam ke- berdasarkan jam sekarang
     const hour = now.getHours();
     let currentJamKe = 1;
     if (hour >= 8 && hour < 9) currentJamKe = 2;
@@ -169,6 +169,7 @@ const UI = {
     try {
       const response = await fetch(CONFIG.GAS_ENDPOINT, {
         method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           action: "getMonitoringPBM",
           hari: currentHari,
