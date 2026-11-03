@@ -178,7 +178,6 @@ const UI = {
       }).then(res => res.json());
 
       if (response.status === "success") {
-        // Filter HANYA kelas yang BELUM terisi/belum masuk
         const kelasKosong = (response.monitoring || []).filter(item => !item.isHadir);
 
         document.getElementById('pbm-empty-count').textContent = kelasKosong.length;
@@ -222,30 +221,31 @@ const UI = {
     }
   },
 
-  // === UNDUH TEMPLATE CSV (GURU & SISWA) ===
-  downloadTemplateCSV(type) {
-    let csvContent = "";
-    let fileName = "";
+  // === FITUR UNDUH TEMPLATE CSV (GURU & SISWA) ===
+  downloadTemplateGuruCSV() {
+    const csvContent = "Nama,NIP,No_HP,Mapel,Jurusan\n" +
+                       "Ajiardin S.T. Gr.,198501012010011001,085298875399,Kreativitas Inovasi dan Kewirausahaan,TKJ\n" +
+                       "Farida S.Pi. Gr.,199603072023212032,081234567890,Dasar-Dasar Agribisnis,APAT\n" +
+                       "Nining Suhartini,199001012022012001,082345678901,Perhotelan,Perhotelan";
+    
+    this._downloadCSV(csvContent, "Template_Data_Guru_SMKN1Wakatobi.csv");
+  },
 
-    if (type === 'guru') {
-      csvContent = "Nama,NIP,No_HP,Mapel,Jurusan\n" +
-                   "Ajiardin S.T. Gr.,198501012010011001,085298875399,Kreativitas Inovasi dan Kewirausahaan,TKJ\n" +
-                   "Farida S.Pi. Gr.,199603072023212032,081234567890,Dasar-Dasar Agribisnis,APAT\n" +
-                   "Nining Suhartini,199001012022012001,082345678901,Perhotelan,Perhotelan";
-      fileName = "Template_Data_Guru.csv";
-    } else if (type === 'siswa') {
-      csvContent = "Nama,Kelas,NISN,Tingkat_Fase\n" +
-                   "Salfian Lina Saputri,XI TKJ 1,0051234567,Fase F\n" +
-                   "Ahmad Dahlan,XI TKJ 1,0051234568,Fase F\n" +
-                   "Siti Nurhaliza,XI PH 2,0051234569,Fase F";
-      fileName = "Template_Data_Siswa.csv";
-    }
+  downloadTemplateSiswaCSV() {
+    const csvContent = "Nama,Kelas,NISN,Tingkat_Fase\n" +
+                       "Salfian Lina Saputri,XI TKJ 1,0051234567,Fase F\n" +
+                       "Ahmad Dahlan,XI TKJ 1,0051234568,Fase F\n" +
+                       "Siti Nurhaliza,XI PH 2,0051234569,Fase F";
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    this._downloadCSV(csvContent, "Template_Data_Siswa_SMKN1Wakatobi.csv");
+  },
+
+  _downloadCSV(content, filename) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute("download", fileName);
+    link.setAttribute("download", filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -256,12 +256,12 @@ const UI = {
   handleImportGuru() {
     const fileInput = document.getElementById('file-csv-guru');
     if (!fileInput.files[0]) return alert('Pilih file CSV Guru terlebih dahulu!');
-    alert('Proses impor data Guru dimulai...');
+    alert('Memulai unggah berkas CSV Data Guru...');
   },
 
   handleImportSiswa() {
     const fileInput = document.getElementById('file-csv-siswa');
     if (!fileInput.files[0]) return alert('Pilih file CSV Siswa terlebih dahulu!');
-    alert('Proses impor data Siswa dimulai...');
+    alert('Memulai unggah berkas CSV Data Siswa...');
   }
 };
